@@ -74,18 +74,14 @@ function ChatTree(element) {
 
 
     function removeLi(li) {
-        let pathLi = li.getAttribute("path");
-        const items = element.getElementsByTagName("li");
-        // let index = items.indexOf(li);
-        // console.log(index);
-        for (let i = 0; i <items.length ; i++) {
-            let currPath = items[i].getAttribute("path");
-            if(currPath.startsWith(pathLi)){
-                if(pathLi!==currPath){
-                    element.removeChild(items[i]);
-                    i--;
-                }
-            }
+        let tabLI = li.getAttribute("tabindex");
+        let nextSibling = li.nextSibling;
+        let nextSiblingTabLI = nextSibling.getAttribute("tabindex");
+
+        while(Number(nextSiblingTabLI)>Number(tabLI)){
+            element.removeChild(nextSibling);
+            nextSibling = li.nextSibling;
+            nextSiblingTabLI = nextSibling.getAttribute("tabindex");
         }
     }
 

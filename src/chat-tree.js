@@ -3,33 +3,53 @@ function ChatTree(element) {
     let generalItems = [];
     let chosenLi = null;
 
-    // function getEventTarget(e) {
-    //     e = e || window.event;
-    //     return e.target || e.srcElement;
-    // }
-    //
-    // element.onclick = function(event) {
-    //     let target = getEventTarget(event);
-    //     alert(target.innerHTML + element.indexOf(target));
-    // };
-
     function load(items) {
         generalItems = items;
         clear();
-        addLine(element, items, false);
+        addLine(element, items);
+        element.focus();
     }
 
     function clear() {
         element.innerHTML = "";
     }
 
-    function addLine(main, items, parent) {
-        if (main === element.lastElementChild){
-            parent= true;
+    function getEventTarget(e) {
+        e = e || window.event;
+        return e.target || e.srcElement;
+    }
+
+
+    element.onclick = function(event) {
+        event.stopPropagation()
+        let target = getEventTarget(event);
+        if(target!==element && !(undefined)){
+            toggleClass(target);
         }
+    };
+
+    element.ondblclick = function(event) {
+        event.preventDefault()
+        event.stopPropagation()
+        let target = getEventTarget(event);
+        if(target.data.dataType==="group" && !(undefined)) {
+            toggleClass(target);
+            if (target.getAttribute("status") === "close") {
+                target.setAttribute("status", "open");
+                addLine(target);
+            } else {
+                target.setAttribute("status", "close");
+                removeLi(target);
+            }
+        }
+    };
+
+
+
+    function addLine(main) {
+        let parent = (main === element.lastElementChild);
+        let items = (main===element)? generalItems: main.data.items;
         let positionIndexElement=main;
-        let parentPath = main.getAttribute("path");
-        parentPath = (parentPath===null)? "": parentPath+",";
 
         if(items.length>0){
             let pad = main.getAttribute("tabindex");
@@ -38,30 +58,19 @@ function ChatTree(element) {
                 let img = document.createElement("img");
                 img.setAttribute("src", "pics/user3D.png");
                 li.appendChild(img);
+                li.data={};
                 li.setAttribute("tabindex",""+ (Number(pad)+1));
                 li.setAttribute("dataType", entry.type);
-                li.setAttribute("path", parentPath+items.indexOf(entry));
+                li.data.dataType=entry.type;
                 li.setAttribute("style", "padding-left:"+ Number(pad)*10+"px");
                 li.appendChild(document.createTextNode(entry.name));
-                li.addEventListener('click', ()=>{
-                    toggleClass(li);
-                }, false);
-                if(entry.type==="group"){
+
+                if(li.data.dataType==="group"){
                     img.setAttribute("src", "pics/group3D.png");
                     li.classList.add("type-group");
                     li.setAttribute("status", "close");
-                    li.addEventListener('dblclick', (e)=>{
-                        e.preventDefault();
-                        toggleClass(li);
-                        if(li.getAttribute("status")==="close"){
-                            li.setAttribute("status", "open");
-                            addLine(li, entry.items, false);
-                        }else{
-                            li.setAttribute("status", "close");
-                            removeLi(li);
-                        }
-                    }, false);
-                }
+                    li.data.items= entry.items;
+                                    }
                 if (parent || main===element){
                     element.appendChild(li);
                 }else{
@@ -81,7 +90,9 @@ function ChatTree(element) {
         while(Number(nextSiblingTabLI)>Number(tabLI)){
             element.removeChild(nextSibling);
             nextSibling = li.nextSibling;
+            if(nextSibling===null) return;
             nextSiblingTabLI = nextSibling.getAttribute("tabindex");
+
         }
     }
 
@@ -96,15 +107,6 @@ function ChatTree(element) {
         }
         element.classList.add("activeLine");
         chosenLi = element;
-    };
-
-    const searchForElement = (path)=> {
-        let chosenGroup = generalItems[path.shift()];
-
-        for(let i of path){
-         chosenGroup = chosenGroup.items[i];
-        }
-        return chosenGroup;
     };
 
     // Handling Keyboard Press
@@ -186,12 +188,8 @@ function ChatTree(element) {
         let type = chosenLi.getAttribute("dataType");
         let status = chosenLi.getAttribute("status");
         if(type==="group" && status==="close"){
-            //toggleClass(chosenLi);
             chosenLi.setAttribute("status", "open");
-            let path = chosenLi.getAttribute("path");
-            path  = path.split(",");
-            let group = searchForElement(path);
-            addLine(chosenLi, group.items, false);
+            addLine(chosenLi);
         }
     }
 

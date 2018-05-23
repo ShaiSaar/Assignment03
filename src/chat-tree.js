@@ -6,7 +6,7 @@ function ChatTree(element) {
     function load(items) {
         generalItems = items;
         clear();
-        addLine(element, items);
+        addLine(element);
         element.focus();
     }
 
